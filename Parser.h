@@ -35,7 +35,7 @@ private:
 	std::shared_ptr<Main_function> parse_main();
 	std::shared_ptr<Define> parse_define();
 	std::shared_ptr<Include> parse_include();
-	std::shared_ptr<Var_declaration> parse_declaration();
+	std::shared_ptr<Var_declaration> parse_declaration(std::shared_ptr<Block>);
 	std::shared_ptr<Assignement> parse_assignement(std::shared_ptr<Variable>, std::shared_ptr<Symbol>);
 	std::shared_ptr<Expression> parse_expression();
 	std::shared_ptr<Expression> parse_simple_expression();
@@ -43,9 +43,10 @@ private:
 	std::shared_ptr<Expression> parse_factor();
 	std::shared_ptr<If_statement> parse_if();
 	std::shared_ptr<While_statement> parse_while();
-	std::shared_ptr<Instruction> parse_instruction();
+	std::shared_ptr<Instruction> parse_instruction(std::shared_ptr<Block>);
 	std::shared_ptr<Condition_complex> parse_condition();
 	std::shared_ptr<Scanf> parse_scanf();
+	std::shared_ptr<Comment> parse_comment();
 	
 };
 

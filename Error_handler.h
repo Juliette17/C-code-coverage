@@ -19,10 +19,15 @@ public:
 	void static error_in_main(std::string, int);
 	void static invalid_directive(std::string, int);
 
+	/*****************************************
+				Parser errors
+	*****************************************/
 	void static unexpected_token(std::string, int);
 	void static expected_different_token(std::string, int, std::string);
 	void static wrong_type(std::string, int, std::string);
 	void static undeclared_variable(std::string, int);
+	void static variable_redefinition(std::string, int);
+	void static main_redefinition(int);
 
 };
 

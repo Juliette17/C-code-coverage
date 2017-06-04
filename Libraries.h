@@ -1,40 +1,7 @@
-#ifndef NODE_H
-#define NODE_H
+#ifndef LIBRARIES_H
+#define LIBRARIES_H
 
-#include <memory>
-#include <string>
-
-
-class Node {
-
-public:
-	enum class Node_type {
-		PROGRAM,
-		MAIN_FUNCTION,
-		DEFINE,
-		INCLUDE,
-		WHILE_STATEMENT,
-		IF_STATEMENT,
-		CONDITION,
-		RETURN,
-		LOOP_STOP, //CONTINUE AND BREAK
-		DECLARATION, //VARIABLE DECLARATION
-		ASSIGNEMENT,
-		ASSIGNED,
-		VARIABLE,
-		OPERATOR,
-		EXPRESSION,
-		INSTRUCTION,
-		COMMENT,
-		SCANF,
-		SCANF_PARAMETER
-	};
-
-	virtual Node_type get_type() = 0;
-
-};
-
-
+#include "Node.h"
 #include "Assigned.h"
 #include "Assignement.h"
 #include "Block.h"
@@ -63,6 +30,4 @@ public:
 #include "Variable.h"
 #include "While_statement.h"
 
-
-
-#endif //NODE
+#endif //instruction

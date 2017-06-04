@@ -6,6 +6,7 @@
 #include <memory>
 #include "Defined_tokens.h"
 #include "Token_type.h"
+#include "Scanf.h"
 
 class Symbol {
 
@@ -14,6 +15,7 @@ protected:
 	Identifier_type type;
 	bool immutable;
 	bool has_value;
+	std::vector < std::shared_ptr<Scanf>> scanfs;
 
 public:
 	std::string get_name() { return name; }
@@ -35,8 +37,13 @@ public:
 	}
 	bool has_valuee() { return has_value; }
 	virtual std::string get_value() = 0;
+	std::vector<std::shared_ptr<Scanf>> get_scanfs() { return scanfs; }
+	void add_scanf(std::shared_ptr<Scanf> scanf) { scanfs.push_back(scanf); }
+
+
 	virtual void set_value(int v) { std::cout << "BASE" << std::endl; }
 	virtual void set_value(char x) { std::cout << "BASE2" << std::endl; }
+
 
 };
 

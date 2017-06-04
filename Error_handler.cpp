@@ -93,3 +93,21 @@ void Error_handler::undeclared_variable(std::string wrong_var, int line_no)
 	std::cerr << std::endl;
 	SetConsoleTextAttribute(hConsole, 7);
 }
+
+void Error_handler::variable_redefinition(std::string variable, int line_no)
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, 12);
+	std::cerr << "ERROR Line " << line_no << ": " << "Variable redefinition: " << variable << std::endl;
+	std::cerr << std::endl;
+	SetConsoleTextAttribute(hConsole, 7);
+}
+
+void Error_handler::main_redefinition(int line_no)
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, 12);
+	std::cerr << "ERROR Line " << line_no << ": " << "Main already defined! " << std::endl;
+	std::cerr << std::endl;
+	SetConsoleTextAttribute(hConsole, 7);
+}
