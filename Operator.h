@@ -1,7 +1,7 @@
 #ifndef OPERATOR_H
 #define OPERATOR_H
 
-#include "Node.h"
+#include "Libraries.h"
 
 class Operator : public Node {
 private:

@@ -3,7 +3,6 @@
 
 #include "Node.h"
 #include "Variable.h"
-#include "Assigned.h"
 #include <memory>
 
 class Assignement : public Node {

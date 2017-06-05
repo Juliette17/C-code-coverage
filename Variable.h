@@ -1,7 +1,9 @@
 #ifndef VARIABLE_H
 #define VARIABLE_H
 
-#include "Node.h"
+#include "Assigned.h"
+#include "Token.h"
+#include "Token_type.h"
 
 class Variable : public Assigned {
 

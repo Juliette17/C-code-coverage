@@ -1,6 +1,8 @@
 #ifndef LOOP_STOP_H
 #define LOOP_STOP_H
 
+#include "Libraries.h"
+
 class Loop_stop : public Node {
 	Token token;
 public:

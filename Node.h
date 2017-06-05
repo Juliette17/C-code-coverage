@@ -35,34 +35,4 @@ public:
 };
 
 
-#include "Assigned.h"
-#include "Assignement.h"
-#include "Block.h"
-#include "Condition.h"
-#include "Comment.h"
-#include "Declaration.h"
-#include "Define.h"
-#include "Defined_tokens.h"
-#include "Error_handler.h"
-#include "Expression.h"
-#include "If_statement.h"
-#include "Instruction.h"
-#include "Include.h"
-#include "Loop_stop.h"
-#include "Main_function.h"
-#include "Operator.h"
-#include "Output_handler.h"
-#include "Parser.h"
-#include "Program.h"
-#include "Return_statement.h"
-#include "Scanf.h"
-#include "Scanner.h"
-#include "Symbol.h"
-#include "Token.h"
-#include "Token_type.h"
-#include "Variable.h"
-#include "While_statement.h"
-
-
-
 #endif //NODE

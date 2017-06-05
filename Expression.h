@@ -2,9 +2,9 @@
 #define EXPRESSION_H
 
 #include <memory>
-#include "Node.h"
-#include "Operator.h"
+#include "Assigned.h"
 #include "Condition.h"
+#include "Operator.h"
 
 class Expression : public Assigned, public Condition {
 

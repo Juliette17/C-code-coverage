@@ -2,6 +2,7 @@
 #define SCANF_H
 
 #include "Node.h"
+#include "Token.h"
 
 class Scanf_parameter : public Node {
 

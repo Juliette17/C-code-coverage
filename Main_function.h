@@ -1,7 +1,7 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
 
-#include "Node.h"
+#include "Libraries.h"
 
 
 class Main_function : public Block {
@@ -12,8 +12,6 @@ public:
 	}
 
 };
-
-
 
 
 #endif //main

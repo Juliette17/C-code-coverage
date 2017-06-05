@@ -7,8 +7,9 @@
 #include <cctype>
 #include "Token.h"
 #include "Output_handler.h"
-#include "Defined_tokens.h"
 #include "Error_handler.h"
+#include "Token_type.h"
+#include "Defined_tokens.h"
 
 class Scanner {
 

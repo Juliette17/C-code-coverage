@@ -1,8 +1,9 @@
 #ifndef ASSIGNED_H
 #define ASSIGNED_H
 
-#include "Token_type.h"
+//#include "Libraries.h"
 #include "Node.h"
+#include "Token_type.h"
 
 class Assigned : virtual public Node {
 

@@ -4,9 +4,10 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "Defined_tokens.h"
 #include "Token_type.h"
 #include "Scanf.h"
+class Block;
+//#include "Libraries.h"
 
 class Symbol {
 
@@ -16,6 +17,9 @@ protected:
 	bool immutable;
 	bool has_value;
 	std::vector < std::shared_ptr<Scanf>> scanfs;
+
+	//scope in which the symbol was declared (main, while, if)
+	std::shared_ptr<Block> scope; // if nullptr, program
 
 public:
 	std::string get_name() { return name; }
@@ -39,7 +43,8 @@ public:
 	virtual std::string get_value() = 0;
 	std::vector<std::shared_ptr<Scanf>> get_scanfs() { return scanfs; }
 	void add_scanf(std::shared_ptr<Scanf> scanf) { scanfs.push_back(scanf); }
-
+	void set_scope(std::shared_ptr<Block> scope) { this->scope = scope; }
+	std::shared_ptr<Block> get_scope() { return scope; }
 
 	virtual void set_value(int v) { std::cout << "BASE" << std::endl; }
 	virtual void set_value(char x) { std::cout << "BASE2" << std::endl; }

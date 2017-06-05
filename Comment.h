@@ -1,7 +1,7 @@
 #ifndef COMMENT_H
 #define COMMENT_H
 
-#include "Node.h"
+#include "Libraries.h"
 
 class Comment : public Node {
 

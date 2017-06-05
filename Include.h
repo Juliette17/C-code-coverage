@@ -1,7 +1,7 @@
 #ifndef INCLUDE_H
 #define INCLUDE_H
 
-#include "Node.h"
+#include "Libraries.h"
 
 class Include : public Node {
 	Token token;

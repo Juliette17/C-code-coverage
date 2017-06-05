@@ -1,9 +1,7 @@
 #ifndef DECLARATION_H
 #define DECLARATION_H
 
-#include "Node.h"
-#include "Variable.h"
-#include "Assignement.h"
+#include "Libraries.h"
 
 
 class Var_declaration : public Node {

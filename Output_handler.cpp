@@ -38,11 +38,14 @@ void Output_handler::show_symbol_table(std::vector < std::shared_ptr<Symbol>> st
 	SetConsoleTextAttribute(hConsole, 3);
 	std::cout << "\tSYMBOL TABLE " << std::endl << std::endl;
 	std::cout << "type\tname\thas value" << std::endl << std::endl;
-	for (auto& symbol : st)
-	{	
-		std::cout << symbol->get_identifier_type_name() << "\t" << symbol->get_name() << "\t" << symbol->has_valuee() << "\t" << symbol->get_value();
-		std::cout << std::endl;
-	}
+	if (st.size() == 0)
+		std::cout << "No symbols in this scope" << std::endl;
+	else
+		for (auto& symbol : st)
+		{	
+			std::cout << symbol->get_identifier_type_name() << "\t" << symbol->get_name() << "\t" << symbol->has_valuee() << "\t" << symbol->get_value();
+			std::cout << std::endl;
+		}
 	
 	std::cout << std::endl;
 	SetConsoleTextAttribute(hConsole, 7);

@@ -2,12 +2,7 @@
 #define PROGRAM_H_INCLUDED
 
 #include <vector>
-#include "Node.h"
-//#include "Define.h"
-//#include "Main_function.h"
-//#include "Declaration.h"
-//#include "Include.h"
-//#include "Symbol.h"
+#include "Libraries.h"
 
 
 class Program : public Node {

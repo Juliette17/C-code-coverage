@@ -1,6 +1,9 @@
 #ifndef TOKEN_TYPE_H_INCLUDED
 #define TOKEN_TYPE_H_INCLUDED
 
+
+#include <vector>
+
 enum Token_type : int {
 
 	IDENTIFIER = 0, //NAME OF VARIABLE with _ inside

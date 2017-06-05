@@ -1,10 +1,10 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 
-#include "Node.h"
-//#include "Expression.h"
-//#include "Declaration.h"
-//#include "Scanf.h"
+#include "Expression.h"
+#include "Assignement.h"
+#include "Declaration.h"
+#include "Scanf.h"
 
 class Instruction : public Node {
 

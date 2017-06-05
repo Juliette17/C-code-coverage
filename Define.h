@@ -1,8 +1,7 @@
 #ifndef DEFINE_H
 #define DEFINE_H
 
-#include "Node.h"
-#include "Variable.h"
+#include "Libraries.h"
 #include <memory>
 
 class Define : public Node {
