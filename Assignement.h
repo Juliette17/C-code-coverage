@@ -17,6 +17,13 @@ public:
 	}
 	void set_left(std::shared_ptr<Variable> var) { left_operand = var; }
 	void set_right(std::shared_ptr<Assigned> assigned) { right_operand = assigned; }
+	virtual std::vector < std::shared_ptr<Node>> get_children() 
+	{
+		std::vector<std::shared_ptr<Node>> children;
+		children.push_back(left_operand);
+		children.push_back(right_operand);
+		return children;
+	}
 };
 
 #endif //assignement

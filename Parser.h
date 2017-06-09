@@ -8,15 +8,17 @@
 #include "While_statement.h"
 #include "Token_type.h"
 #include "Block.h"
+#include "Else_block.h"
 #include <vector>
 
 class Parser {
 
 private:
-	std::vector < std::shared_ptr<Symbol>> symbol_table;
+	std::vector < std::shared_ptr<Symbol>> symbol_table; //global and main
 	Scanner& scanner;
 	std::shared_ptr<Program> tree_root;
 	unsigned token_index;
+	std::vector < std::shared_ptr<Scanf>> all_scanfs_in_program;
 
 public:
 	Parser(Scanner& s) : scanner(s), tree_root(nullptr), token_index(0) {}
@@ -24,6 +26,8 @@ public:
 	void parse_program();
 	std::vector < std::shared_ptr<Symbol>> get_symbol_table() { return symbol_table; }
 	std::shared_ptr<Program> get_tree_root() { return tree_root; }
+	void add_to_scanfs(std::shared_ptr<Scanf> scanf) { all_scanfs_in_program.push_back(scanf); }
+	std::vector < std::shared_ptr<Scanf>> get_all_scanfs_in_program() { return all_scanfs_in_program; }
 
 private:
 	Token go_to_next_token();
@@ -32,6 +36,7 @@ private:
 	bool is_in_basic_operands(Token_type);
 	bool is_in_arithmetic_operators(Token_type);
 	bool is_rel_operator(Token_type);
+	bool is_first_in_line(Token_type);
 	std::shared_ptr<Symbol> find_in_symbol_table(std::string);
 	std::shared_ptr<Main_function> parse_main();
 	std::shared_ptr<Define> parse_define();
@@ -43,6 +48,7 @@ private:
 	std::shared_ptr<Expression> parse_term(Identifier_type, std::shared_ptr<Block>);
 	std::shared_ptr<Expression> parse_factor(Identifier_type, std::shared_ptr<Block>);
 	std::shared_ptr<If_statement> parse_if(std::shared_ptr<Block>);
+	std::shared_ptr<Else_block> parse_else(std::shared_ptr<Block>, std::shared_ptr<Block>);
 	std::shared_ptr<While_statement> parse_while(std::shared_ptr<Block>);
 	std::shared_ptr<Instruction> parse_instruction(std::shared_ptr<Block>);
 	std::shared_ptr<Condition_complex> parse_condition(std::shared_ptr<Block>);

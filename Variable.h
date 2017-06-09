@@ -4,6 +4,8 @@
 #include "Assigned.h"
 #include "Token.h"
 #include "Token_type.h"
+#include "Symbol.h"
+#include "Block.h"
 
 class Variable : public Assigned {
 
@@ -17,7 +19,21 @@ public:
 	Node_type get_type() {
 		return Node_type::VARIABLE;
 	}
-	Variable(Token tok) : token(tok) {}
+	Variable(Token tok, std::shared_ptr<Block> scope) : token(tok) { 
+		this->has_value = false; 
+		this->name = token.get_value(); 
+		std::shared_ptr<Symbol> found_symbol = scope->find_in_symbol_table(name);
+		//std::sahred_ptr<Integer_symbol> int_sym = (Integer_symbol)found_symbol;
+		if (found_symbol != nullptr && found_symbol->has_valuee())
+		{
+			this->has_value = true;
+			double x = 1.0; //unnecessary random number
+			value = found_symbol->get_value(x);
+		}
+		else
+			this->has_value = false;
+
+	}
 	Variable(std::string name, Identifier_type type = Identifier_type::INT_ID, double value = 0.0f, bool has_value = false, bool immutable = false)
 	{
 		this->immutable = immutable;

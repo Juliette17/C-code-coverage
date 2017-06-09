@@ -7,7 +7,7 @@
 
 class Condition : public Node {
 public:
-
+	//virtual std::shared_ptr<Condition> get_condition();
 	Node_type get_type() {
 		return Node_type::CONDITION;
 	}
@@ -30,6 +30,7 @@ public:
 		left_condition = left;
 		right_condition = right;
 	}
+	//std::shared_ptr<Condition> get_condition() { return std::make_shared<Condition>(this); }
 };
 
 #endif

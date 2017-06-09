@@ -58,8 +58,11 @@ const std::unordered_map<std::string, Token_type> double_operators = {
 const std::vector<char> end_of_token = { '=', '!', '<', '>', '&', '|', ',', '\'', '\"', ';', '(', ')', '{', '}', 
 										 '+', '-', '*', '/', '%' };
 
-const std::set<Token_type> operand_literals = {Token_type::REAL_CONSTANT, Token_type::INTEGER_CONSTANT, Token_type::IDENTIFIER };
+const std::set<Token_type> operand_literals = {Token_type::REAL_CONSTANT, Token_type::INTEGER_CONSTANT, Token_type::IDENTIFIER};
 const std::set<Token_type> aritmetic_operators = {Token_type::PLUS, Token_type::MINUS, Token_type::MULTIPLY, Token_type::DIVIDE, Token_type::MODULO };
+const std::set<Token_type> additivie_operators = { Token_type::PLUS, Token_type::MINUS, Token_type::OR };
+const std::set<Token_type> multiplicative_operators = { Token_type::MULTIPLY, Token_type::DIVIDE, Token_type::MODULO, Token_type::AND };
 const std::set<Token_type> rel_operators = {Token_type::EQUALITY, Token_type::INEQUALITY, Token_type::LESS_OR_EQUAL, Token_type::LESS, Token_type::GREATER, Token_type::GREATER_OR_EQUAL};
+const std::set<Token_type> first_in_line = { Token_type::REAL_CONSTANT, Token_type::INTEGER_CONSTANT, Token_type::IDENTIFIER, Token_type::SEMICOLON, Token_type::SCANF, Token_type::BREAK, Token_type::COMMENT, Token_type::CONTINUE, Token_type::IF, Token_type::RETURN, Token_type::TYPE_IDENTIFIER, Token_type::WHILE };
 
 #endif

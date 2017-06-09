@@ -23,6 +23,12 @@ bool Parser::is_in_basic_operands(Token_type type)
 	else return false;
 }
 
+bool Parser::is_first_in_line(Token_type type)
+{
+	if (first_in_line.find(type) != first_in_line.end()) return true;
+	else return false;
+}
+
 bool Parser::is_in_arithmetic_operators(Token_type type)
 {
 	if (aritmetic_operators.find(type) != aritmetic_operators.end()) return true;
@@ -132,6 +138,11 @@ std::shared_ptr<Main_function> Parser::parse_main()
 				while (true)
 				{
 					token = go_to_next_token();
+					if (token.get_type() == Token_type::EOFILE)
+					{
+						Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "}");
+						return node;
+					}
 					if (token.get_type() == Token_type::BREAK || token.get_type() == Token_type::CONTINUE)
 					{
 						Output_handler::parsing("loop stop", token.get_value());
@@ -194,10 +205,14 @@ std::shared_ptr<Main_function> Parser::parse_main()
 								token = go_to_next_token();
 								
 								//probably delete this error handler from here
-								std::cout << "in main" << std::endl;
+								//std::cout << "in main" << std::endl;
 								Error_handler::unexpected_token(get_current_token().get_value(), get_current_token().get_line_no());	
 								if (token.get_type() == Token_type::IDENTIFIER || token.get_type() == Token_type::TYPE_IDENTIFIER || token.get_type() == Token_type::COMMENT)
 									token = go_to_previous_token();
+								else if (token.get_type() == Token_type::EOFILE)
+								{
+									Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "}");
+								}
 							
 							}
 							else
@@ -263,7 +278,7 @@ std::shared_ptr<Define> Parser::parse_define()
 				char value = cstr[1];
 				type = Identifier_type::CHAR_ID;
 				var = std::make_shared<Variable>(name, type, (char)value, true, true);
-				symbol = std::make_shared<Character_symbol>(name, type, (char)value, true, true);
+				symbol = std::make_shared<Character_symbol>(name, type, value, (char)value, true, true);
 				symbol_table.push_back(symbol);
 			}
 				
@@ -273,7 +288,7 @@ std::shared_ptr<Define> Parser::parse_define()
 				int value = std::stoi(token.get_value());
 				type = Identifier_type::INT_ID;
 				var = std::make_shared<Variable>(name, type, (int)value, true, true);
-				symbol = std::make_shared<Integer_symbol>(name, type, (int)value, true, true);
+				symbol = std::make_shared<Integer_symbol>(name, type, value, (int)value, true, true);
 				symbol_table.push_back(symbol);
 			}
 
@@ -285,14 +300,14 @@ std::shared_ptr<Define> Parser::parse_define()
 				{
 					type = Identifier_type::FLOAT_ID;
 					var = std::make_shared<Variable>(name, type, (float)value, true, true);
-					symbol = std::make_shared<Float_symbol>(name, type, (float)value, true, true);
+					symbol = std::make_shared<Float_symbol>(name, type, value, (float)value, true, true);
 					symbol_table.push_back(symbol);
 				}
 				else
 				{
 					type = Identifier_type::DOUBLE_ID;
 					var = std::make_shared<Variable>(name, type, value, true, true);
-					symbol = std::make_shared<Double_symbol>(name, type, (double)value, true, true);
+					symbol = std::make_shared<Double_symbol>(name, type, value, (double)value, true, true);
 					symbol_table.push_back(symbol);
 				}
 			}
@@ -363,27 +378,42 @@ std::shared_ptr<Var_declaration> Parser::parse_declaration(std::shared_ptr<Block
 			//std::cout << "assignement";
 			name = token.get_value();
 			var = std::make_shared<Variable>(name, type);
-			if (find_in_symbol_table(name) == nullptr)
+			symbol->set_name(name);
+			if (scope == nullptr)
 			{
-				symbol->set_name(name);
-				std::shared_ptr<Symbol> found_symbol;
-				if (scope != nullptr)
-					 found_symbol = scope->find_in_symbol_table(symbol);
-				if (scope != nullptr && found_symbol == nullptr)
-					scope->add_to_symbol_table(symbol); 
-				else if (scope != nullptr && !scope->is_scope_of_declaration(found_symbol))
-					scope->change_symbol_in_table(found_symbol, symbol);
-				else if (scope != nullptr && scope->is_scope_of_declaration(found_symbol))
-					scope->add_to_symbol_table(symbol);
-				else //else this is program
+				if (find_in_symbol_table(name) == nullptr)
+				{
 					symbol_table.push_back(symbol);
-				token = go_to_next_token();
+					token = go_to_next_token();
+				}
+				else
+				{
+					Error_handler::variable_redefinition(name, token.get_line_no());
+					token = go_to_next_token();
+				}
 			}
 			else
 			{
-				Error_handler::variable_redefinition(name, token.get_line_no());
+				std::shared_ptr<Symbol> found_symbol;
+				found_symbol = scope->find_in_symbol_table(symbol->get_name());
+				if (found_symbol == nullptr)
+				{
+					symbol->set_scope(scope);
+					scope->add_to_symbol_table(symbol);
+				}
+					
+				else if (!scope->is_scope_of_declaration(found_symbol))
+					scope->change_symbol_in_table(found_symbol, symbol);
+				else 
+				{
+					Error_handler::variable_redefinition(name, token.get_line_no());
+					//token = go_to_next_token();
+				}
+				
+					
 				token = go_to_next_token();
 			}
+			
 			
 			
 			if (token.get_type() == Token_type::ASSIGNMENT)
@@ -403,7 +433,9 @@ std::shared_ptr<Var_declaration> Parser::parse_declaration(std::shared_ptr<Block
 					Error_handler::expected_different_token(token.get_value(), token.get_line_no(), ";");
 					node->set_variable(var);
 					node->set_assignement(assignement);
-					go_to_previous_token();
+
+					if (is_in_basic_operands(get_current_token().get_type()) || get_current_token().get_type() == Token_type::TYPE_IDENTIFIER || get_current_token().get_type() == Token_type::SCANF || get_current_token().get_type() == Token_type::COMMENT)
+						go_to_previous_token();
 					//go_to_next_token();
 					return node;
 				}
@@ -439,6 +471,7 @@ std::shared_ptr<Assignement> Parser::parse_assignement(std::shared_ptr<Variable>
 	Output_handler::parsing("assignement", get_current_token().get_value());
 	std::shared_ptr<Assignement> node = std::make_shared<Assignement>();
 	std::shared_ptr<Assigned> assigned = nullptr;// = std::make_shared<Assigned>();
+	std::shared_ptr<Expression> expression = nullptr;
 	
 	Token token = go_to_next_token();
 	
@@ -477,7 +510,31 @@ std::shared_ptr<Assignement> Parser::parse_assignement(std::shared_ptr<Variable>
 		if (symbol != nullptr)
 		{
 			Identifier_type symbol_type = symbol->get_type();
-			assigned = parse_expression(symbol_type, scope);
+			expression = parse_expression(symbol_type, scope);
+			if (expression == nullptr)
+			{
+				return node;
+			}
+			std::shared_ptr<Variable> temp_var = expression->get_variable();
+
+			if (temp_var != nullptr) //add giving value in assignement!!!!!!
+			{
+				//std::cout << "var in expression" << temp_var->get_value() << std::endl;
+				double value = temp_var->get_value();
+				//std::cout << "var in expression" << value << std::endl;
+				if (temp_var->has_valuee())
+				{
+					variable->set_value(value);
+					if (scope == nullptr || scope->get_type() == Node::Node_type::MAIN_FUNCTION)
+						symbol->set_value(value);
+					//std::cout << "symbol in expression" << symbol->get_value(value) << std::endl;
+				}
+			}
+			else
+			{
+				//symbol->set_value(0);
+			}
+			assigned = expression;
 		}
 		else
 			assigned = parse_expression(Identifier_type::UNKNOWN, scope);
@@ -499,6 +556,7 @@ std::shared_ptr<Assignement> Parser::parse_assignement(std::shared_ptr<Variable>
 std::shared_ptr<Expression> Parser::parse_expression(Identifier_type symbol_type, std::shared_ptr<Block> scope) {
 	
 	std::shared_ptr<Expression> left = parse_simple_expression(symbol_type, scope);
+	
 	Token token = go_to_next_token();
 
 	//Output_handler::parsing("expression", get_current_token().get_value());
@@ -507,6 +565,8 @@ std::shared_ptr<Expression> Parser::parse_expression(Identifier_type symbol_type
 	{
 		std::shared_ptr<Operator> op = std::make_shared<Operator>(token.get_type());
 		std::shared_ptr<Expression> right = parse_simple_expression(symbol_type, scope);
+		std::cout << "in expression" << left->get_variable()->get_name() << std::endl;
+		std::cout << "in expression " << right->get_variable()->get_name() << std::endl;
 		return std::make_shared<Expression>(op, left, right);
 	}
 	else
@@ -558,7 +618,9 @@ std::shared_ptr<Expression> Parser::parse_term(Identifier_type symbol_type, std:
 	if (token.get_type() == Token_type::MULTIPLY || token.get_type() == Token_type::DIVIDE || token.get_type() == Token_type::MODULO || token.get_type() == Token_type::AND)
 	{
 		std::shared_ptr<Operator> op = std::make_shared<Operator>(token.get_type());
-		return std::make_shared<Expression>(op, left, parse_factor(symbol_type, scope));
+		std::shared_ptr<Expression> right = parse_factor(symbol_type, scope);
+		
+		return std::make_shared<Expression>(op, left, right);
 	}
 	else
 	{
@@ -571,7 +633,9 @@ std::shared_ptr<Expression> Parser::parse_term(Identifier_type symbol_type, std:
 std::shared_ptr<Expression> Parser::parse_factor(Identifier_type symbol_type, std::shared_ptr<Block> scope) {
 	
 	std::shared_ptr<Expression> result;
-	std::shared_ptr<Variable> a;
+	std::shared_ptr<Variable> var;
+	std::shared_ptr<Symbol> symbol;
+	std::shared_ptr<Symbol> found_symbol;
 	Identifier_type type;
 	Token token = go_to_next_token();
 
@@ -581,7 +645,19 @@ std::shared_ptr<Expression> Parser::parse_factor(Identifier_type symbol_type, st
 	{
 		if (token.get_type() == Token_type::IDENTIFIER)
 		{
-			a = std::make_shared<Variable>(token.get_value(), Identifier_type::UNKNOWN);
+			var = std::make_shared<Variable>(token.get_value(), Identifier_type::UNKNOWN);
+			symbol = std::make_shared<Integer_symbol>(token.get_value());
+			found_symbol = scope->find_in_symbol_table(symbol->get_name());
+			if (found_symbol == nullptr)
+			{
+				Error_handler::undeclared_variable(token.get_value(), token.get_line_no());
+			}
+			else
+			{
+				double d = 1.0;
+				if (found_symbol->get_scanfs().size() == 0)
+					var->set_value(symbol->get_value(d));
+			}
 		}
 		else
 		{
@@ -590,7 +666,10 @@ std::shared_ptr<Expression> Parser::parse_factor(Identifier_type symbol_type, st
 				//string to int
 				int value = std::stoi(token.get_value());
 				type = Identifier_type::INT_ID;
-				a = std::make_shared<Variable>("", type, (int)value, true, false);
+				
+				var = std::make_shared<Variable>("", type, (int)value, true, false);
+				
+				
 			}
 
 			if (token.get_type() == Token_type::REAL_CONSTANT)
@@ -600,21 +679,24 @@ std::shared_ptr<Expression> Parser::parse_factor(Identifier_type symbol_type, st
 				if (value >= FLT_MIN && value <= FLT_MAX)
 				{
 					type = Identifier_type::FLOAT_ID;
-					a = std::make_shared<Variable>("", type, (float)value, true, false);
+					var = std::make_shared<Variable>("", type, (float)value, true, false);
 				}
 				else
 				{
 					type = Identifier_type::DOUBLE_ID;
-					a = std::make_shared<Variable>("", type, value, true, false);
+					var = std::make_shared<Variable>("", type, value, true, false);
 				}
 			}
 		}
-		
-		result = std::make_shared<Expression>(nullptr, a, nullptr);
+		//std::cout << "var value" << var->get_value() << std::endl;
+		result = std::make_shared<Expression>(var);
+		std::cout << var->has_valuee() << var->get_value() << var->get_name() << std::endl;
 	}
 	else if (token.get_type() == Token_type::PARENTHESE_OPEN)
 	{
 		result = parse_expression(symbol_type, scope);
+		//std::cout << "in parenthese" << result->get_left()->get_variable()->get_name() << std::endl;
+		//std::cout << "in parenthese " << result->get_right()->get_variable()->get_name() << std::endl;
 		token = go_to_next_token();
 		if (token.get_type() != Token_type::PARENTHESE_CLOSE)
 		{
@@ -649,7 +731,7 @@ std::shared_ptr<Instruction> Parser::parse_instruction(std::shared_ptr<Block> sc
 	{
 		token = go_to_previous_token();
 		std::shared_ptr<Var_declaration> d = parse_declaration(scope); //ended with semicolon
-		std::cout << get_current_token().get_value() << std::endl;
+		//std::cout << get_current_token().get_value() << std::endl;
 		if (d == nullptr)
 			return nullptr;
 		node->set_declaration(d);
@@ -670,11 +752,11 @@ std::shared_ptr<Instruction> Parser::parse_instruction(std::shared_ptr<Block> sc
 				if (token.get_type() == Token_type::IDENTIFIER)
 				{
 					std::shared_ptr<Symbol> new_s = std::make_shared<Integer_symbol>(token.get_value());
-					std::shared_ptr<Symbol> s = scope->find_in_symbol_table(new_s);
+					std::shared_ptr<Symbol> s = scope->find_in_symbol_table(new_s->get_name());
 					if (s != nullptr)
 					{
-						std::shared_ptr<Variable> v = std::make_shared<Variable>(token);
-						expr = std::make_shared<Expression>(nullptr, v, nullptr);
+						std::shared_ptr<Variable> v = std::make_shared<Variable>(token, scope);
+						expr = std::make_shared<Expression>(v);
 						node->set_expression(expr);
 					}
 					else
@@ -686,8 +768,8 @@ std::shared_ptr<Instruction> Parser::parse_instruction(std::shared_ptr<Block> sc
 				}
 				else
 				{
-					std::shared_ptr<Variable> v = std::make_shared<Variable>(go_to_previous_token());
-					expr = std::make_shared<Expression>(nullptr, v, nullptr);
+					std::shared_ptr<Variable> v = std::make_shared<Variable>(go_to_previous_token(), scope);
+					expr = std::make_shared<Expression>(v);
 					node->set_expression(expr);
 				}
 				return node;
@@ -697,13 +779,16 @@ std::shared_ptr<Instruction> Parser::parse_instruction(std::shared_ptr<Block> sc
 				token = go_to_previous_token();
 				if (token.get_type() == Token_type::IDENTIFIER)
 				{
-					std::shared_ptr<Variable> v = std::make_shared<Variable>(token);
-					std::shared_ptr<Symbol> new_s = std::make_shared<Integer_symbol>(token.get_value());
-					std::shared_ptr<Symbol> s = scope->find_in_symbol_table(new_s);
+					std::shared_ptr<Variable> v = std::make_shared<Variable>(token, scope);
+					std::shared_ptr<Symbol> new_s = std::make_shared<Double_symbol>(token.get_value());
+					std::shared_ptr<Symbol> s = scope->find_in_symbol_table(new_s->get_name());
 					if (s != nullptr)
 					{
-						std::shared_ptr<Variable> v = std::make_shared<Variable>(token);
-						expr = std::make_shared<Expression>(nullptr, v, nullptr);
+						std::shared_ptr<Variable> v = std::make_shared<Variable>(token, scope);
+						double d = 1.0;
+						if (s->has_valuee())
+							v->set_value(s->get_value(d));
+						expr = std::make_shared<Expression>(v);
 						node->set_expression(expr);
 					}
 					else
@@ -755,8 +840,9 @@ std::shared_ptr<Instruction> Parser::parse_instruction(std::shared_ptr<Block> sc
 std::shared_ptr<If_statement> Parser::parse_if(std::shared_ptr<Block> scope) 
 {
 	std::shared_ptr<If_statement> node = std::make_shared<If_statement>();
+	std::shared_ptr<Else_block> else_block = nullptr;
 	node->copy_symbol_table_from_parent(scope->get_symbol_table(), scope->get_instructions(), scope);
-	std::shared_ptr<Condition> cond = nullptr;
+	std::shared_ptr<Expression> cond = nullptr;
 	std::shared_ptr<Block> ifs = nullptr;
 	std::shared_ptr<Instruction> instr = nullptr;
 	std::shared_ptr<Return_statement> return_stat = nullptr;
@@ -780,7 +866,17 @@ std::shared_ptr<If_statement> Parser::parse_if(std::shared_ptr<Block> scope)
 			{
 				while (true)
 				{
+					if (token.get_type() == Token_type::EOFILE)
+					{
+						Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "}");
+						return node;
+					}
 					token = go_to_next_token();
+					if (token.get_type() == Token_type::EOFILE)
+					{
+						Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "}");
+						return node;
+					}
 					if (token.get_type() == Token_type::BREAK || token.get_type() == Token_type::CONTINUE)
 					{
 						Output_handler::parsing("loop_stop", token.get_value());
@@ -796,7 +892,7 @@ std::shared_ptr<If_statement> Parser::parse_if(std::shared_ptr<Block> scope)
 					}
 					else if (token.get_type() == Token_type::RETURN)
 					{
-						Output_handler::parsing("return", token.get_value());
+						Output_handler::parsing("return in if", token.get_value());
 						return_stat = std::make_shared<Return_statement>(token);
 						token = go_to_next_token();
 						if (token.get_type() == Token_type::INTEGER_CONSTANT)
@@ -808,11 +904,14 @@ std::shared_ptr<If_statement> Parser::parse_if(std::shared_ptr<Block> scope)
 							}
 							else //expected semicolon
 							{
+								Error_handler::expected_different_token(token.get_value(), token.get_line_no(), ";");
+								token = go_to_previous_token();
 							}
 						}
 						else //wrong value of return, only integer
 						{
-
+							Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "return value");
+							token = go_to_previous_token();
 						}
 					}
 					else if (token.get_type() == Token_type::COMMENT)
@@ -824,7 +923,23 @@ std::shared_ptr<If_statement> Parser::parse_if(std::shared_ptr<Block> scope)
 					}
 					else if (token.get_type() == Token_type::BRACE_CLOSE)
 					{
-						return node;
+						token = go_to_next_token();
+						if (token.get_type() == Token_type::ELSE)
+						{
+							if ((else_block = parse_else(scope, node)) == nullptr)
+								return node;
+							else
+							{
+								//scope->add_to_blocks(node);
+								scope->add_to_blocks(else_block);
+								return node;
+							}
+						}	
+						else
+						{
+							token = go_to_previous_token();
+							return node;
+						}
 					}
 					else
 						go_to_previous_token();
@@ -839,15 +954,21 @@ std::shared_ptr<If_statement> Parser::parse_if(std::shared_ptr<Block> scope)
 								token = go_to_next_token();
 
 								//probably delete this error handler from here
-								std::cout << "in if" << std::endl;
+								//std::cout << "in if" << std::endl;
 								Error_handler::unexpected_token(get_current_token().get_value(), get_current_token().get_line_no());
 								if (token.get_type() == Token_type::IDENTIFIER || token.get_type() == Token_type::TYPE_IDENTIFIER || token.get_type() == Token_type::COMMENT)
 									token = go_to_previous_token();
+								else if (token.get_type() == Token_type::EOFILE)
+								{
+									Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "}");
+									return node;
+								}
 
 							}
 							else
 							{
 								node->add_to_blocks(ifs);
+
 							}
 						}
 						else
@@ -870,7 +991,7 @@ std::shared_ptr<If_statement> Parser::parse_if(std::shared_ptr<Block> scope)
 		}
 
 	}
-	else //error expected
+	else 
 	{
 		go_to_previous_token();
 		return nullptr;
@@ -879,11 +1000,118 @@ std::shared_ptr<If_statement> Parser::parse_if(std::shared_ptr<Block> scope)
 	return node;
 }
 
+std::shared_ptr<Else_block> Parser::parse_else(std::shared_ptr<Block> scope, std::shared_ptr<Block> if_block)
+{
+	std::shared_ptr<Else_block> node = std::make_shared<Else_block>();
+	node->copy_symbol_table_from_parent(scope->get_symbol_table(), scope->get_instructions(), scope);
+	std::shared_ptr<Operator> op = std::make_shared<Operator>(Token_type::NEGATION);
+	std::shared_ptr<Expression> cond = std::make_shared<Expression>(op, if_block->get_condition(), nullptr);
+	std::shared_ptr<Block> ifs = nullptr;
+	std::shared_ptr<Instruction> instr = nullptr;
+	std::shared_ptr<Return_statement> return_stat = nullptr;
+	std::shared_ptr<Loop_stop> loop_stop = nullptr;
+
+	node->set_condition(cond);
+	Output_handler::parsing("else block", get_current_token().get_value());
+	Token token = go_to_next_token();
+	//klamerka
+	if (token.get_type() == Token_type::BRACE_OPEN)
+	{
+		while (true)
+		{
+			token = go_to_next_token();
+			if (token.get_type() == Token_type::BREAK || token.get_type() == Token_type::CONTINUE)
+			{
+				Output_handler::parsing("loop_stop", token.get_value());
+				loop_stop = std::make_shared<Loop_stop>(token);
+				token = go_to_next_token();
+				if (token.get_type() == Token_type::SEMICOLON)
+				{
+					continue;
+				}
+				else //expected semicolon
+				{
+				}
+			}
+			else if (token.get_type() == Token_type::RETURN)
+			{
+				Output_handler::parsing("return", token.get_value());
+				return_stat = std::make_shared<Return_statement>(token);
+				token = go_to_next_token();
+				if (token.get_type() == Token_type::INTEGER_CONSTANT)
+				{
+					token = go_to_next_token();
+					if (token.get_type() == Token_type::SEMICOLON)
+					{
+						continue;
+					}
+					else //expected semicolon
+					{
+					}
+				}
+				else //wrong value of return, only integer
+				{
+
+				}
+			}
+			else if (token.get_type() == Token_type::COMMENT)
+			{
+				token = go_to_previous_token();
+				node->add_comment(parse_comment());
+				token = get_current_token();
+				continue;
+			}
+			else if (token.get_type() == Token_type::BRACE_CLOSE)
+			{
+				return node;
+			}
+			else
+				go_to_previous_token();
+			if ((instr = parse_instruction(node)) == nullptr)
+			{
+
+				if ((ifs = parse_if(node)) == nullptr)
+				{
+
+					if ((ifs = parse_while(node)) == nullptr)
+					{ //error unexpected token
+						token = go_to_next_token();
+
+						//probably delete this error handler from here
+						//std::cout << "in if" << std::endl;
+						Error_handler::unexpected_token(get_current_token().get_value(), get_current_token().get_line_no());
+						if (token.get_type() == Token_type::IDENTIFIER || token.get_type() == Token_type::TYPE_IDENTIFIER || token.get_type() == Token_type::COMMENT)
+							token = go_to_previous_token();
+					}
+					else
+					{
+						node->add_to_blocks(ifs);
+					}
+				}
+				else
+				{
+					node->add_to_blocks(ifs);
+				}
+			}
+			else
+			{
+				node->add_to_instructions(instr);
+			}
+
+		}
+
+	}
+	else //error no block {} in else
+	{
+	}
+	
+}
+
 std::shared_ptr<While_statement> Parser::parse_while(std::shared_ptr<Block> scope) 
 {
 	std::shared_ptr<While_statement> node = std::make_shared<While_statement>();
 	node->copy_symbol_table_from_parent(scope->get_symbol_table(), scope->get_instructions(), scope);
-	std::shared_ptr<Condition> cond = nullptr;
+	std::shared_ptr<Expression> cond = nullptr;
 	std::shared_ptr<Block> ifs = nullptr;
 	std::shared_ptr<Instruction> instr = nullptr;
 	std::shared_ptr<Return_statement> return_stat = nullptr;
@@ -894,6 +1122,8 @@ std::shared_ptr<While_statement> Parser::parse_while(std::shared_ptr<Block> scop
 	if (token.get_type() == Token_type::WHILE)
 	{
 		cond = parse_expression(Identifier_type::UNKNOWN, scope);
+		//std::cout << "warunek" << cond->get_left()->get_left()->get_left()->get_variable()->get_name() << std::endl;
+		//std::cout << "warunek" << cond->get_left()->get_left()->get_right()->get_variable()->get_name() << std::endl;
 		if (cond == nullptr) //error missing (condition) 
 		{
 
@@ -906,7 +1136,18 @@ std::shared_ptr<While_statement> Parser::parse_while(std::shared_ptr<Block> scop
 			{
 				while (true)
 				{
+					if (token.get_type() == Token_type::EOFILE)
+					{
+						Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "}");
+						return node;
+					}
+
 					token = go_to_next_token();
+					if (token.get_type() == Token_type::EOFILE)
+					{
+						Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "}");
+						return node;
+					}
 					if (token.get_type() == Token_type::BREAK || token.get_type() == Token_type::CONTINUE)
 					{
 						Output_handler::parsing("loop_stop", token.get_value());
@@ -922,7 +1163,7 @@ std::shared_ptr<While_statement> Parser::parse_while(std::shared_ptr<Block> scop
 					}
 					else if (token.get_type() == Token_type::RETURN)
 					{
-						Output_handler::parsing("return", token.get_value());
+						Output_handler::parsing("return in while", token.get_value());
 						return_stat = std::make_shared<Return_statement>(token);
 						token = go_to_next_token();
 						if (token.get_type() == Token_type::INTEGER_CONSTANT)
@@ -961,7 +1202,7 @@ std::shared_ptr<While_statement> Parser::parse_while(std::shared_ptr<Block> scop
 
 							if ((ifs = parse_while(node)) == nullptr)
 							{ //error unexpected token
-								std::cout << "in while" << std::endl;
+								//std::cout << "in while" << std::endl;
 								token = go_to_next_token();
 
 								//probably delete this error handler from here
@@ -969,6 +1210,12 @@ std::shared_ptr<While_statement> Parser::parse_while(std::shared_ptr<Block> scop
 								Error_handler::unexpected_token(get_current_token().get_value(), get_current_token().get_line_no());
 								if (token.get_type() == Token_type::IDENTIFIER || token.get_type() == Token_type::TYPE_IDENTIFIER || token.get_type() == Token_type::COMMENT)
 									token = go_to_previous_token();
+								else if (token.get_type() == Token_type::EOFILE)
+								{
+									Error_handler::expected_different_token(token.get_value(), token.get_line_no(), "}");
+									return node;
+								}
+
 							}
 							else
 							{
@@ -978,6 +1225,10 @@ std::shared_ptr<While_statement> Parser::parse_while(std::shared_ptr<Block> scop
 						else
 						{
 							node->add_to_blocks(ifs);
+							/*if (ifs == node->get_blocks()[0])
+								std::cout << "if 0" <<std::endl;
+							if (ifs == node->get_blocks()[1])
+								std::cout << "if 1" << std::endl;*/
 						}
 					}
 					else
@@ -1002,6 +1253,7 @@ std::shared_ptr<While_statement> Parser::parse_while(std::shared_ptr<Block> scop
 		return nullptr;
 	}
 
+	//std::cout << "wychodze z maina" << std::endl;
 	return node;
 }
 
@@ -1021,7 +1273,7 @@ std::shared_ptr<Scanf> Parser::parse_scanf(std::shared_ptr<Block> scope)
 				{
 					std::shared_ptr<Scanf_parameter> p = std::make_shared<Scanf_parameter>(token);
 					std::shared_ptr<Symbol> new_s = std::make_shared<Integer_symbol>(token.get_value());
-					std::shared_ptr<Symbol> symbol = scope->find_in_symbol_table(new_s);
+					std::shared_ptr<Symbol> symbol = scope->find_in_symbol_table(new_s->get_name());
 					if (symbol != nullptr)
 					{
 						scanf->add_to_parameters(p);
@@ -1043,12 +1295,14 @@ std::shared_ptr<Scanf> Parser::parse_scanf(std::shared_ptr<Block> scope)
 						token = go_to_next_token();
 						if (token.get_type() == Token_type::SEMICOLON)
 						{
+							add_to_scanfs(scanf);
 							return scanf;
 						}
 							
 						else
 						{
 							Error_handler::expected_different_token(token.get_value(), token.get_line_no(), ";");
+							add_to_scanfs(scanf);
 							return scanf;
 						}
 					}
@@ -1056,6 +1310,7 @@ std::shared_ptr<Scanf> Parser::parse_scanf(std::shared_ptr<Block> scope)
 					{
 						Error_handler::expected_different_token(token.get_value(), token.get_line_no(), ")");
 						token = go_to_next_token();
+						add_to_scanfs(scanf);
 						return scanf;
 					}
 				}
@@ -1071,6 +1326,7 @@ std::shared_ptr<Scanf> Parser::parse_scanf(std::shared_ptr<Block> scope)
 			{
 				Error_handler::expected_different_token(token.get_value(), token.get_line_no(), ")");
 				token = go_to_next_token();
+				add_to_scanfs(scanf);
 				return scanf;
 			}
 		}

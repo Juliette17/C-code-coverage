@@ -42,6 +42,7 @@ public:
 	std::shared_ptr<Include> get_include() { return include;  }
 	std::shared_ptr<Main_function> get_main() { return main; }
 	std::vector<std::shared_ptr<Var_declaration>> get_declarations() { return declarations; }
+
 	
 	std::shared_ptr<Symbol> find_in_symbol_table(std::shared_ptr<Symbol> symbol)
 	{

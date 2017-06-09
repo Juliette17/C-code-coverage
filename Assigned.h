@@ -4,6 +4,7 @@
 //#include "Libraries.h"
 #include "Node.h"
 #include "Token_type.h"
+//class Block;
 
 class Assigned : virtual public Node {
 
@@ -17,6 +18,7 @@ public:
 	void set_assigned_type(Identifier_type type) { this->type = type; }
 	bool has_valuee() { return has_value; }
 	void set_has_value(bool has) { has_value = has; }
+
 };
 
 #endif //assigned_h

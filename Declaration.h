@@ -1,7 +1,8 @@
 #ifndef DECLARATION_H
 #define DECLARATION_H
 
-#include "Libraries.h"
+#include "Variable.h"
+#include "Assignement.h"
 
 
 class Var_declaration : public Node {
@@ -18,6 +19,14 @@ public:
 	void set_assignement(std::shared_ptr<Assignement> assignement) { this->assignement = assignement; }
 	std::shared_ptr<Variable> get_variable() { return variable; }
 	std::shared_ptr<Assignement> get_assignement() { return assignement; }
+
+	virtual std::vector < std::shared_ptr<Node>> get_children()
+	{
+		std::vector<std::shared_ptr<Node>> children;
+		children.push_back(variable);
+		children.push_back(assignement);
+		return children;
+	}
 };
 
 #endif

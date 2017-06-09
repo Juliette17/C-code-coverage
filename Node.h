@@ -15,6 +15,7 @@ public:
 		INCLUDE,
 		WHILE_STATEMENT,
 		IF_STATEMENT,
+		ELSE_BLOCK,
 		CONDITION,
 		RETURN,
 		LOOP_STOP, //CONTINUE AND BREAK
@@ -31,6 +32,8 @@ public:
 	};
 
 	virtual Node_type get_type() = 0;
+	virtual std::vector < std::shared_ptr<Node>> get_children() { std::vector < std::shared_ptr<Node>> children; return children; }
+	//virtual std::shared_ptr<Node> get_parent() = 0;
 
 };
 
