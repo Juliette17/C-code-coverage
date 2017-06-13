@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <sstream>
 
 #include "Scanner.h"
 #include "Parser.h"
@@ -14,10 +15,15 @@ int main(int argc, char* argv[])
 	}
 	else
 	{*/
-		std::string file = argv[1];
+		//std::string file = argv[1];
 
-		//std::string file = "testParser.c";
+		std::string file = "testParser.c";
 		Scanner scanner(file);
+		/*std::ifstream t(file);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		std::cout << buffer.str() << std::endl;*/
+
 		Parser parser(scanner);
 		parser.parse_program();
 		/*if (parser.get_tree_root() != nullptr)
@@ -25,6 +31,10 @@ int main(int argc, char* argv[])
 		
 		Output_handler::show_symbol_table(parser.get_symbol_table());
 		std::shared_ptr<Block> block = parser.get_tree_root()->get_main();
+		Test_generator test_generator(parser);
+
+		int a;
+		int b;
 		/*while (block != nullptr)
 		{
 			Output_handler::show_symbol_table(block->get_symbol_table());
@@ -41,8 +51,8 @@ int main(int argc, char* argv[])
 		Output_handler::show_symbol_table(parser.get_tree_root()->get_main()->get_blocks()[0]->get_blocks()[0]->get_symbol_table());
 		Output_handler::show_symbol_table(parser.get_tree_root()->get_main()->get_blocks()[0]->get_blocks()[1]->get_symbol_table());
 		Output_handler::show_symbol_table(parser.get_tree_root()->get_main()->get_blocks()[0]->get_blocks()[2]->get_symbol_table());*/
-		Test_generator test_generator(parser);
-		int number_of_vectors = test_generator.get_scopes().size();
+		
+		/*int number_of_vectors = test_generator.get_scopes().size();
 		std::cout << "number of vectors " << number_of_vectors << std::endl;
 		for (int i = 0; i < number_of_vectors; ++i)
 		{
@@ -65,7 +75,7 @@ int main(int argc, char* argv[])
 				std::cout << param->get_param().get_value() << "\t"; //name 
 				std::cout << param->get_value() << std::endl; //value
 			}
-		}
+		*/
 
 		/*for (auto& a: test_generator.get_condition_values())
 		{

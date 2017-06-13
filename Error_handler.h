@@ -28,6 +28,7 @@ public:
 	void static undeclared_variable(std::string, int);
 	void static variable_redefinition(std::string, int);
 	void static main_redefinition(int);
+	void static uninitialised_variable(std::string);
 
 };
 

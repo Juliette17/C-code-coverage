@@ -74,6 +74,7 @@ public:
 	void set_value(double value)
 	{
 		int val = (int)value;
+		this->value = value;
 		set_value(val);
 	}
 	void set_value(int value)
@@ -103,6 +104,7 @@ public:
 	void set_value(double value)
 	{
 		char val = (char)value;
+		this->value = value;
 		set_value(val);
 	}
 	void set_value(char value)
@@ -133,6 +135,7 @@ public:
 	void set_value(double value)
 	{
 		float val = (float)value;
+		this->value = value;
 		set_value(val);
 	}
 	void set_value(float value)

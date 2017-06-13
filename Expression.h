@@ -7,13 +7,15 @@
 #include "Operator.h"
 class Variable;
 
-class Expression : public Assigned, public Condition {
+class Expression :  public Condition {
 
 private:
 	std::shared_ptr<Operator> operation; 
 	std::shared_ptr<Expression> left_operand;
 	std::shared_ptr<Expression> right_operand;
 	std::shared_ptr<Variable> variable;
+	Identifier_type type; //int, char etc
+	bool has_value;
 	
 public:
 	Node_type get_type() {
@@ -64,6 +66,10 @@ public:
 	void set_left(std::shared_ptr<Expression> a) { left_operand = a; }
 	void set_right(std::shared_ptr<Expression> a) { right_operand = a; }
 	void set_operation(std::shared_ptr<Operator> operation) { this->operation = operation; }
+	Identifier_type get_assigned_type() { return type; }
+	void set_assigned_type(Identifier_type type) { this->type = type; }
+	bool has_valuee() { return has_value; }
+	void set_has_value(bool has) { has_value = has; }
 };
 
 #endif //expression

@@ -111,3 +111,12 @@ void Error_handler::main_redefinition(int line_no)
 	std::cerr << std::endl;
 	SetConsoleTextAttribute(hConsole, 7);
 }
+
+void Error_handler::uninitialised_variable(std::string var_name)
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, 12);
+	std::cerr << "ERROR: " << "Unitialised variable used: " << var_name << std::endl;
+	std::cerr << std::endl;
+	SetConsoleTextAttribute(hConsole, 7);
+}

@@ -3,24 +3,31 @@
 
 #include "Parser.h"
 #include <vector>
+#include <limits>
 
 struct Executing_block {
 	std::shared_ptr<Block> scope;
 	bool executed;
-	int last_executed_instruction;
+	int last_executed_instruction; //index in vector of scope->get_children()
 	bool condition_value;
 	std::vector<std::shared_ptr<Block>> parents;
+	std::vector<std::shared_ptr<Symbol>> symbol_table;
+	std::vector<std::shared_ptr<Scanf>> scanfs;
 	Executing_block(std::shared_ptr<Block> scope,
 		bool executed,
 		int last_executed_instruction,
-		std::vector<std::shared_ptr<Block>> parents
+		std::vector<std::shared_ptr<Block>> parents,
+		std::vector<std::shared_ptr<Symbol>> symbol_table,
+		std::vector<std::shared_ptr<Scanf>> scanfs
 		)
 	{
 		this->executed = executed;
 		this->scope = scope;
 		this->last_executed_instruction = last_executed_instruction;
 		condition_value = false;
-		parents = parents;
+		this->parents = parents;
+		this->symbol_table = symbol_table;
+		this->scanfs = scanfs;
 	}
 };
 
@@ -32,13 +39,16 @@ private:
 	std::vector<bool> condition_values;
 	std::vector<std::shared_ptr<Symbol>> symbol_table;
 	std::vector<std::shared_ptr<Scanf>> scanfs;
-	std::vector<Executing_block> executing_blocks;
-
+	std::vector<std::shared_ptr<Executing_block>> executing_blocks;
+	std::vector < std::vector<std::shared_ptr<Scanf>>> test_sets;
 	
 	//int last_executed_instruction;
 
 public:
-	Test_generator(Parser& p) : parser(p) { init(); }
+	Test_generator(Parser& p) : parser(p) { 
+		init(); 
+		run();
+	}
 	std::vector<std::shared_ptr<Symbol>> get_symbol_table() { return symbol_table; }
 	std::vector<std::shared_ptr<Scanf>> get_scanfs() { return scanfs; }
 	
@@ -58,11 +68,16 @@ public:
 
 	void init();
 	void run();
-	void init_executing_blocks(Executing_block);
-	void execute_block_on_condition_true(std::shared_ptr<Block>);
-	double calculate_condition(std::shared_ptr<Expression>);
+	void init_executing_blocks(std::shared_ptr<Executing_block>);
 
-
+	//returns last executed instruction - typically Executing_block.scope->get_children().size()-1
+	int execute_block_on_condition_true(std::shared_ptr<Executing_block>);
+	char accept_instruction(std::shared_ptr<Instruction>, std::shared_ptr<Executing_block>);
+	double calculate_expression(std::shared_ptr<Executing_block>, std::shared_ptr<Expression>, bool, bool, std::shared_ptr<Expression>);
+	std::shared_ptr<Executing_block>find_executing_block(std::shared_ptr<Block>);
+	std::shared_ptr<Scanf_parameter> in_scanfs(std::shared_ptr<Executing_block>, std::string);
+	std::shared_ptr<Symbol> find_in_symbol_table(std::shared_ptr<Executing_block>, std::string);
+	void change_symbol_in_table(std::shared_ptr<Symbol>, std::shared_ptr<Symbol>, std::shared_ptr<Executing_block>);
 
 	void add_to_scopes(std::vector<std::shared_ptr<Block>> scopes) { this->scopes.push_back(scopes); }
 	void add_to_scopes(int index, std::shared_ptr<Block> scope) { scopes[index].push_back(scope); }
