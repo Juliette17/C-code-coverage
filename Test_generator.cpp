@@ -96,8 +96,27 @@ void Test_generator::run()
 		{
 			for (auto& p : s->get_parameters())
 			{
+
 				if (!p->has_value)
-					p->set_value(0);
+				{
+					if (!p->has_max_value && !p->has_min_value)
+					{
+						std::set<double> pro = p->get_prohibited();
+						double random_number = rand() % 100 + 1;
+						while (pro.count(random_number) != 0)
+							random_number = rand() % 100 + 1;
+						p->set_value(random_number);	
+					}
+					else if (p->has_min_value)
+					{
+						p->set_value(p->get_min_value() + 1);
+					}
+					else if (p->has_max_value)
+					{
+						p->set_value(p->get_max_value() - 1);
+					}
+					
+				}	
 				p->set_test_value(p->get_value());
 
 			}
@@ -151,26 +170,7 @@ void Test_generator::init()
 	std::shared_ptr<Executing_block> eb = std::make_shared<Executing_block>(main, false, -1, parents, symbol_table, scanfs);
 	executing_blocks.push_back(eb);
 	init_executing_blocks(eb);
-	std::cout << "executing blocks " << executing_blocks.size() << std::endl;
-	Output_handler::show_symbol_table(symbol_table);
-	std::cout << "scanfs " << scanfs.size() << std::endl; //from global scope - of course 0
-	std::cout << "executing blocks" << std::endl;
-	for (int i = 0; i < executing_blocks.size(); ++i)
-	{
-		std::cout << executing_blocks[i]->scope->get_type() << std::endl;
-		std::cout << executing_blocks[i]->parents.size() << std::endl;
-		for (int j = 0; j < executing_blocks[i]->parents.size(); ++j)
-		{
-			std::cout << '\t' << executing_blocks[i]->parents[j]->get_type() << std::endl;
-		}
-		
-	}
-	/*main_scope.push_back(main);
-	add_to_scopes(main_scope);
-	analyze_scopes(main_scope);
-	analyze_conditions();
-	set_default_value_of_scanf_parameters();
-	check_conditions(); //and add tests*/
+	
 }
 
 void Test_generator::init_executing_blocks(std::shared_ptr<Executing_block> executing_block)
@@ -186,15 +186,16 @@ void Test_generator::init_executing_blocks(std::shared_ptr<Executing_block> exec
 		if (executing_block->scope->get_type() != Node::Node_type::MAIN_FUNCTION)
 			parents.push_back(executing_block->scope);
 
-		std::shared_ptr<Executing_block> eb = std::make_shared<Executing_block>(executing_block->scope->get_blocks()[i], false, -1, parents, symbol_table, scanfs);
+		std::vector<std::shared_ptr<Symbol>> symbol_t;
+		std::vector<std::shared_ptr<Scanf>> scanfss;
+		std::shared_ptr<Executing_block> eb = std::make_shared<Executing_block>(executing_block->scope->get_blocks()[i], false, -1, parents, symbol_t, scanfss);
 		executing_blocks.push_back(eb);
 		init_executing_blocks(eb);
 	}	
 }
 
 
-//////////////////////////////////FINISH THIS///////////////////////////////
-//do something with loop stops - it doesnt work as it should.....
+
 int Test_generator::execute_block_on_condition_true(std::shared_ptr<Executing_block> eb)
 {
 	eb->last_executed_instruction = -1;
@@ -204,7 +205,7 @@ int Test_generator::execute_block_on_condition_true(std::shared_ptr<Executing_bl
 	bool loop_stop = false;
 	int execute_block_result = 0;
 	//wyczyscic symbol table i dodawac po symbolu przy deklaracji
-	std::cout << "symbol table" << scope->get_symbol_table().size() << std::endl;
+	//std::cout << "symbol table" << scope->get_symbol_table().size() << std::endl;
 	for (int i = 0; i < scope->get_children().size(); ++i)
 	{
 		if (scope->get_children()[i]->get_type() == Node::Node_type::INSTRUCTION)
@@ -231,18 +232,18 @@ int Test_generator::execute_block_on_condition_true(std::shared_ptr<Executing_bl
 			std::shared_ptr<Executing_block> new_eb = find_executing_block(b);
 			new_eb->symbol_table.insert(new_eb->symbol_table.end(), eb->symbol_table.begin(), eb->symbol_table.end());
 			new_eb->scanfs.insert(new_eb->scanfs.end(), eb->scanfs.begin(), eb->scanfs.end());
-			for (auto&s : eb->symbol_table)
+			/*for (auto&s : eb->symbol_table)
 			{
 				std::cout << "scope" << eb->scope->get_type() << std::endl;
 				std::cout << "s " << s->get_name() << s->get_value(1.5) << std::endl;
-			}
+			}*/
 
 			if (new_eb->executed == false)
 			{
 				condition_value = calculate_expression(new_eb, b->get_condition(), false, true, nullptr);
 				if (condition_value != 0)
 				{ 
-					std::cout << "ok " << condition_value << std::endl;
+					//std::cout << "ok " << condition_value << std::endl;
 					execute_block_result = execute_block_on_condition_true(new_eb);
 					if (execute_block_result == 1)
 						return 1;
@@ -258,7 +259,8 @@ int Test_generator::execute_block_on_condition_true(std::shared_ptr<Executing_bl
 				}
 				else
 				{
-					return -1; //false condition
+					new_eb->can_be_executed = false;
+					
 				}
 			}
 			else
@@ -267,7 +269,7 @@ int Test_generator::execute_block_on_condition_true(std::shared_ptr<Executing_bl
 			}
 		}
 		eb->last_executed_instruction++;
-		std::cout << "child " << scope->get_children()[i]->get_type() << std::endl;
+		//std::cout << "child " << scope->get_children()[i]->get_type() << std::endl;
 	}
 	eb->executed = true;
 	executed_now.push_back(eb);
@@ -332,7 +334,7 @@ char Test_generator::accept_instruction(std::shared_ptr<Instruction> instr, std:
 				{
 					eb->symbol_table.push_back(new_symbol);
 				}
-				std::cout << new_symbol->get_name() << "  " << new_symbol->get_value() << std::endl;
+				//std::cout << new_symbol->get_name() << "  " << new_symbol->get_value() << std::endl;
 			}
 			else //expression 
 			{
@@ -347,7 +349,7 @@ char Test_generator::accept_instruction(std::shared_ptr<Instruction> instr, std:
 				{
 					eb->symbol_table.push_back(new_symbol);
 				}
-				std::cout << new_symbol->get_name() << "  " << new_symbol->get_value() << std::endl;
+				//std::cout << new_symbol->get_name() << "  " << new_symbol->get_value() << std::endl;
 			}
 		}
 		
@@ -357,20 +359,29 @@ char Test_generator::accept_instruction(std::shared_ptr<Instruction> instr, std:
 	{	
 		std::shared_ptr<Symbol> assigning_symbol;
 		std::shared_ptr<Symbol> symbol = find_in_symbol_table(eb, instr->get_assignement()->get_left()->get_name());
+		if (symbol == nullptr) //undeclared variable
+			return 'a';
 		if (instr->get_assignement()->get_right()->get_variable() != nullptr)
 			assigning_symbol = find_in_symbol_table(eb, instr->get_assignement()->get_right()->get_variable()->get_name());
+		else //expression on right
+		{
+			double v = calculate_expression(eb, instr->get_assignement()->get_right(), false, false, nullptr);
+			symbol->set_value(v);
+		}
 		if (symbol != nullptr && assigning_symbol != nullptr)
 		{
 			double v = assigning_symbol->get_value(1.5);
 			symbol->set_value(v);
-			std::cout << symbol->get_name() << "  " << symbol->get_value() << std::endl;
+			//std::cout << symbol->get_name() << "  " << symbol->get_value() << std::endl;
 		}
-		else if (symbol == nullptr) //undeclared variable
-			;
-		else // symbol != nullptr, but expression on right
+		else if (assigning_symbol == nullptr && instr->get_assignement()->get_right()->get_variable() != nullptr && instr->get_assignement()->get_right()->get_variable()->get_name() == "")
 		{
-			double v = calculate_expression(eb, instr->get_declaration()->get_assignement()->get_right(), false, false, nullptr);
-			symbol->set_value(v);
+			symbol->set_value(instr->get_assignement()->get_right()->get_variable()->get_value());
+		}
+		else// symbol != nullptr, but expression on right
+		{
+			//undeclared variable on right
+			return 'a';
 		}
 
 		return 'a';
@@ -386,11 +397,11 @@ char Test_generator::accept_instruction(std::shared_ptr<Instruction> instr, std:
 
 double Test_generator::calculate_expression(std::shared_ptr<Executing_block> eb, std::shared_ptr<Expression> expression, bool is_left, bool is_condition, std::shared_ptr<Expression> outer_expression)
 {
-	for (auto&s : eb->symbol_table)
+	/*for (auto&s : eb->symbol_table)
 	{
 		std::cout << "scope" << eb->scope->get_type() << std::endl;
 		std::cout << "s " << s->get_name() << s->get_value(1.5) << std::endl;
-	}
+	}*/
 	/*if (outer_expression != nullptr && !is_left && outer_expression->get_left()->get_variable() != nullptr && in_scanfs(eb, outer_expression->get_left()->get_variable()->get_name()) != nullptr)
 	{
 		return 1;
@@ -404,7 +415,7 @@ double Test_generator::calculate_expression(std::shared_ptr<Executing_block> eb,
 			std::cout << "var" << expression->get_variable()->get_value() << std::endl;
 			return expression->get_variable()->get_value();
 		}
-		else if (expression->get_variable() != nullptr)
+		else if (expression->get_variable() != nullptr) //variable
 		{
 			std::shared_ptr<Scanf_parameter> sp = in_scanfs(eb, expression->get_variable()->get_name());
 			std::cout << expression->get_variable()->get_name() << std::endl;
@@ -435,6 +446,18 @@ double Test_generator::calculate_expression(std::shared_ptr<Executing_block> eb,
 							}
 							else
 								return 0;
+						}
+						break;
+					case (Token_type::INEQUALITY) :
+						if (is_left)
+						{
+							double value = calculate_expression(eb, outer_expression->get_right(), false, true, outer_expression);
+							sp->add_prohibited(value);
+						}
+						else
+						{
+							double value = calculate_expression(eb, outer_expression->get_left(), true, true, outer_expression);
+							sp->add_prohibited(value);
 						}
 						break;
 					case (Token_type::LESS) :
@@ -614,13 +637,14 @@ std::shared_ptr<Executing_block> Test_generator::find_executing_block(std::share
 
 void Test_generator::show_test_sets(std::vector<std::vector<std::shared_ptr<Scanf>>> test_sets, std::vector < std::vector<std::shared_ptr<Executing_block>>> executed_in_tests, std::string file_name)
 {
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, 3);
 
 	std::ifstream t(file_name);
 	std::stringstream buffer;
 	buffer << t.rdbuf();
-	std::cout << buffer.str() << std::endl << std::endl;
+	std::cout << buffer.str() << std::endl << std::endl << std::endl << std::endl;
+
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, 3);
 
 	for (int i = 0; i < test_sets.size(); ++i)
 	{
@@ -635,10 +659,10 @@ void Test_generator::show_test_sets(std::vector<std::vector<std::shared_ptr<Scan
 			}
 			std::cout << std::endl << std::endl << std::endl;
 		}
-		std::cout << "\t\t" << "COVERED LINES " << std::endl << std::endl;
+		std::cout << "\t" << "COVERED SCOPES " << std::endl << std::endl;
 		for (int j = 0; j < executed_in_tests[i].size(); ++j)
 		{
-			 std::cout << "\t\t"<< executed_in_tests[i][j]->scope->get_first_line() << " - " << executed_in_tests[i][j]->scope->get_last_line() << std::endl << std::endl;
+			 std::cout << "\t"<< executed_in_tests[i][j]->scope->get_first_line() << " - " << executed_in_tests[i][j]->scope->get_last_line() << std::endl << std::endl;
 		}
 		std::cout << std::endl;
 		std::cout << "==============================================================" << std::endl << std::endl;
@@ -647,6 +671,31 @@ void Test_generator::show_test_sets(std::vector<std::vector<std::shared_ptr<Scan
 	std::cout << std::endl;
 	SetConsoleTextAttribute(hConsole, 7);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -743,13 +792,13 @@ double Test_generator::portion_to_single_conditions(std::shared_ptr<Expression> 
 	//if ()
 	if (is_conjunction_operator(oper))
 	{
-		std::cout << "conjunction_operator" << std::endl;
+		//std::cout << "conjunction_operator" << std::endl;
 		if (oper == Token_type::AND)
 		{
-			std::cout << "and" << std::endl;
+			//std::cout << "and" << std::endl;
 		}
 		else
-			std::cout << "or" << std::endl;
+			//std::cout << "or" << std::endl;
 		portion_to_single_conditions(temp_cond->get_left(), scope);
 		portion_to_single_conditions(temp_cond->get_right(), scope);
 

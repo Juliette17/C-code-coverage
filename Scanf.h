@@ -3,6 +3,7 @@
 
 #include "Node.h"
 #include "Token.h"
+#include <set>
 
 class Scanf_parameter : public Node {
 
@@ -10,7 +11,7 @@ private:
 	Token token;
 	double value;
 	double test_value;
-	std::vector<double> prohibited;
+	std::set<double> prohibited;
 	double min_value;
 	double max_value;
 
@@ -34,8 +35,8 @@ public:
 	double get_value() { return value; }
 	double get_min_value() { return min_value; }
 	double get_max_value() { return max_value; }
-	void add_prohibited(double p) { prohibited.push_back(p); }
-	std::vector<double> get_prohibited() { return prohibited; }
+	void add_prohibited(double p) { prohibited.insert(p); }
+	std::set<double> get_prohibited() { return prohibited; }
 	void set_test_value(double val) { test_value = val; }
 	double get_test_value() { return test_value; }
 

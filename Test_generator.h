@@ -6,12 +6,15 @@
 #include <iostream>
 #include <sstream>
 #include <Windows.h>
+#include <cstdlib>
+#include <time.h>
 #include <string>
 #include <limits>
 
 struct Executing_block {
 	std::shared_ptr<Block> scope;
 	bool executed;
+	bool can_be_executed;
 	int last_executed_instruction; //index in vector of scope->get_children()
 	bool condition_value;
 	std::vector<std::shared_ptr<Block>> parents;
@@ -32,6 +35,7 @@ struct Executing_block {
 		this->parents = parents;
 		this->symbol_table = symbol_table;
 		this->scanfs = scanfs;
+		this->can_be_executed = true;
 	}
 };
 
@@ -52,7 +56,8 @@ private:
 	//int last_executed_instruction;
 
 public:
-	Test_generator(Parser& p, std::string file_name) : parser(p) { 
+	Test_generator(Parser& p, std::string f_name) : parser(p), file_name(f_name) {
+		srand(time(NULL));
 		init(); 
 		run();
 	}

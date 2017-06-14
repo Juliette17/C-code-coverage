@@ -536,7 +536,7 @@ std::shared_ptr<Assignement> Parser::parse_assignement(std::shared_ptr<Variable>
 				if (temp_var->has_valuee())
 				{
 					variable->set_value(value);
-					std::cout << "variable" << variable->get_value() << std::endl;
+					//std::cout << "variable" << variable->get_value() << std::endl;
 					if (scope == nullptr || scope->get_type() == Node::Node_type::MAIN_FUNCTION)
 						symbol->set_value(value);
 					//std::cout << "symbol in expression" << symbol->get_value(value) << std::endl;
@@ -700,7 +700,7 @@ std::shared_ptr<Expression> Parser::parse_factor(Identifier_type symbol_type, st
 		}
 		//std::cout << "var value" << var->get_value() << std::endl;
 		result = std::make_shared<Expression>(var);
-		std::cout << var->has_valuee() << var->get_value() << var->get_name() << std::endl;
+		//std::cout << var->has_valuee() << var->get_value() << var->get_name() << std::endl;
 	}
 	else if (token.get_type() == Token_type::PARENTHESE_OPEN)
 	{
