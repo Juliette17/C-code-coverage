@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 		
 		Output_handler::show_symbol_table(parser.get_symbol_table());
 		std::shared_ptr<Block> block = parser.get_tree_root()->get_main();
-		Test_generator test_generator(parser);
+		Test_generator test_generator(parser, file);
 
 		int a;
 		int b;

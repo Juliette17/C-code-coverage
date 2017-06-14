@@ -3,6 +3,10 @@
 
 #include "Parser.h"
 #include <vector>
+#include <iostream>
+#include <sstream>
+#include <Windows.h>
+#include <string>
 #include <limits>
 
 struct Executing_block {
@@ -35,17 +39,20 @@ class Test_generator {
 
 private:
 	Parser& parser;
+	std::string file_name;
 	std::vector<std::vector<std::shared_ptr<Block>>> scopes;
 	std::vector<bool> condition_values;
 	std::vector<std::shared_ptr<Symbol>> symbol_table;
 	std::vector<std::shared_ptr<Scanf>> scanfs;
 	std::vector<std::shared_ptr<Executing_block>> executing_blocks;
 	std::vector < std::vector<std::shared_ptr<Scanf>>> test_sets;
+	std::vector<std::vector<std::shared_ptr<Executing_block>>> executed_in_test_sets;
+	std::vector<std::shared_ptr<Executing_block>> executed_now;
 	
 	//int last_executed_instruction;
 
 public:
-	Test_generator(Parser& p) : parser(p) { 
+	Test_generator(Parser& p, std::string file_name) : parser(p) { 
 		init(); 
 		run();
 	}
@@ -54,9 +61,10 @@ public:
 	
 	void add_to_symbol_table(std::shared_ptr<Symbol>);
 	void add_to_scanfs(std::shared_ptr<Scanf>);
-	void clear_symbol_table();
+	void clear_symbol_tables();
 	void clear_scanfs();
 	void init_symbol_table_and_scanfs();
+	void reset_all_scanfs();
 	//int get_last_executed_instruction() { return last_executed_instruction; }
 	//void set_last_executed_instruction(int a) { last_executed_instruction = a; }
 
@@ -78,6 +86,7 @@ public:
 	std::shared_ptr<Scanf_parameter> in_scanfs(std::shared_ptr<Executing_block>, std::string);
 	std::shared_ptr<Symbol> find_in_symbol_table(std::shared_ptr<Executing_block>, std::string);
 	void change_symbol_in_table(std::shared_ptr<Symbol>, std::shared_ptr<Symbol>, std::shared_ptr<Executing_block>);
+	void show_test_sets(std::vector<std::vector<std::shared_ptr<Scanf>>> , std::vector < std::vector<std::shared_ptr<Executing_block>>> ts, std::string );
 
 	void add_to_scopes(std::vector<std::shared_ptr<Block>> scopes) { this->scopes.push_back(scopes); }
 	void add_to_scopes(int index, std::shared_ptr<Block> scope) { scopes[index].push_back(scope); }

@@ -9,6 +9,7 @@ class Scanf_parameter : public Node {
 private:
 	Token token;
 	double value;
+	double test_value;
 	std::vector<double> prohibited;
 	double min_value;
 	double max_value;
@@ -27,14 +28,16 @@ public:
 		max_value = 0;
 			value = 0;
 	}
-	void set_min_value(double val) { min_value = val; }
-	void set_max_value(double val) { max_value = val; }
-	void set_value(double val) { value = val; }
+	void set_min_value(double val) { has_min_value = true;  min_value = val; }
+	void set_max_value(double val) { has_max_value = true;  max_value = val; }
+	void set_value(double val) { has_value = true;  value = val; }
 	double get_value() { return value; }
 	double get_min_value() { return min_value; }
 	double get_max_value() { return max_value; }
 	void add_prohibited(double p) { prohibited.push_back(p); }
 	std::vector<double> get_prohibited() { return prohibited; }
+	void set_test_value(double val) { test_value = val; }
+	double get_test_value() { return test_value; }
 
 
 
